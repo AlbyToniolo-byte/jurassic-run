@@ -460,8 +460,8 @@ struct Look: Codable, Equatable {
 
 // MARK: - Negozio: skin e accessori speciali comprati con le monete
 
-enum Costume: String, CaseIterable, Codable { case rainbow, inferno, robot, ghost, galaxy }
-enum Gadget: String, CaseIterable, Codable { case headphones, cape, jetpack, storm, laser }
+enum Costume: String, CaseIterable, Codable { case rainbow, inferno, robot, ghost, galaxy, ice, zombie, electric, glitch, gold }
+enum Gadget: String, CaseIterable, Codable { case headphones, cape, jetpack, storm, laser, bubblegum, halo, balloons, ufo, fireworks }
 
 enum ShopItem: Hashable {
     case costume(Costume), gadget(Gadget)
@@ -473,14 +473,16 @@ enum ShopItem: Hashable {
     }
     var title: String {
         switch self {
-        case .costume(let c): ["🌈 Arcobaleno", "🔥 Inferno", "🤖 Robo-Rex", "👻 Fantasma", "🌌 Galassia"][Costume.allCases.firstIndex(of: c)!]
-        case .gadget(let g): ["🎧 Cuffie da DJ", "🦸 Mantello", "🚀 Jetpack", "⛈️ Nuvola temporale", "🔴 Occhi laser"][Gadget.allCases.firstIndex(of: g)!]
+        case .costume(let c): ["🌈 Arcobaleno", "🔥 Inferno", "🤖 Robo-Rex", "👻 Fantasma", "🌌 Galassia",
+                               "❄️ Ghiaccio", "🧟 Zombie", "⚡ Elettrico", "👾 Glitch", "🥇 Oro"][Costume.allCases.firstIndex(of: c)!]
+        case .gadget(let g): ["🎧 Cuffie da DJ", "🦸 Mantello", "🚀 Jetpack", "⛈️ Nuvola temporale", "🔴 Occhi laser",
+                              "🫧 Gomma da masticare", "😇 Aureola", "🎈 Palloncini", "🛸 UFO", "🎆 Fuochi d'artificio"][Gadget.allCases.firstIndex(of: g)!]
         }
     }
     var price: Int {
         switch self {
-        case .costume(let c): [150, 200, 250, 300, 400][Costume.allCases.firstIndex(of: c)!]
-        case .gadget(let g): [60, 80, 120, 150, 200][Gadget.allCases.firstIndex(of: g)!]
+        case .costume(let c): [150, 200, 250, 300, 400, 180, 220, 320, 450, 600][Costume.allCases.firstIndex(of: c)!]
+        case .gadget(let g): [60, 80, 120, 150, 200, 70, 90, 100, 250, 300][Gadget.allCases.firstIndex(of: g)!]
         }
     }
     func isWorn(in look: Look) -> Bool {
@@ -731,6 +733,51 @@ func drawCostumeTexture(_ c: Costume, in box: NSRect, _ t: CGFloat) {
             let s = 0.25 + 0.3 * (0.5 + 0.5 * sin(t * 5 + CGFloat(k)))
             NSColor.white.setFill(); oval(NSRect(x: x - s / 2, y: y - s / 2, width: s, height: s))
         }
+    case .ice: // cristallo: sfaccettature bianche e un riflesso che passa
+        NSGradient(colors: [rgb(0.85, 0.97, 1), rgb(0.55, 0.85, 1), rgb(0.75, 0.93, 1), rgb(0.4, 0.7, 0.95)])!.draw(in: box, angle: 60)
+        NSColor.white.withAlphaComponent(0.75).setStroke()
+        for k in 0..<9 {
+            let x = box.minX + hash01(k + 5) * box.width, y = box.minY + hash01(k + 15) * box.height
+            strokeLine(P(x, y), P(x + 2.2, y + 1.2), P(x + 1, y - 1.6), P(x, y), width: 0.18)
+        }
+        let x = box.minX - 6 + frac(t * 0.6) * (box.width + 12)
+        NSColor.white.withAlphaComponent(0.8).setFill(); poly(P(x, box.minY), P(x + 1.5, box.minY), P(x + 5.5, box.maxY), P(x + 4, box.maxY))
+    case .zombie: // pelle verdognola a chiazze, con le cuciture
+        NSGradient(colors: [rgb(0.55, 0.7, 0.4), rgb(0.35, 0.5, 0.3)])!.draw(in: box, angle: 90)
+        rgb(0.28, 0.4, 0.22).setFill()
+        for k in 0..<6 {
+            oval(NSRect(x: box.minX + hash01(k + 50) * box.width - 1, y: box.minY + hash01(k + 51) * box.height - 0.8,
+                        width: 2 + hash01(k + 52) * 2, height: 1.4 + hash01(k + 53)))
+        }
+        rgb(0.15, 0.12, 0.1).setStroke()
+        for k in 0..<3 {
+            let x = box.minX + 3 + CGFloat(k) * 5, y = box.minY + 5 + hash01(k + 60) * 5
+            strokeLine(P(x, y), P(x + 3, y + 0.6), width: 0.2)
+            for s in 0..<4 { let sx = x + CGFloat(s) * 0.9 + 0.3, sy = y + CGFloat(s) * 0.15; strokeLine(P(sx, sy - 0.4), P(sx + 0.2, sy + 0.7), width: 0.18) }
+        }
+    case .electric: // blu elettrico che pulsa, con fulmini che si riaccendono dentro il corpo
+        let pulse = 0.5 + 0.5 * sin(t * 12)
+        NSGradient(colors: [rgb(0.05, 0.15, 0.6), rgb(0.15 + 0.15 * pulse, 0.5 + 0.2 * pulse, 1)])!.draw(in: box, angle: 90)
+        NSColor(srgbRed: 0.85, green: 0.95, blue: 1, alpha: 0.9).setStroke()
+        let seed = Int(t * 15)
+        for k in 0..<3 {
+            let pts = (0...5).map { s in P(box.minX + 2 + CGFloat(s) * 3, box.minY + 4 + CGFloat(k) * 3 + (hash01(seed * 31 + k * 7 + s) - 0.5) * 2.5) }
+            let bolt = NSBezierPath(); bolt.move(to: pts[0]); pts.dropFirst().forEach { bolt.line(to: $0) }; bolt.lineWidth = 0.25; bolt.stroke()
+        }
+    case .glitch: // bande di colore che saltano come un segnale rotto (12 volte al secondo)
+        let seed = Int(t * 12)
+        let palette = [rgb(1, 0.1, 0.6), rgb(0.1, 1, 0.9), rgb(0.6, 1, 0.1), rgb(0.15, 0.1, 0.3), rgb(1, 1, 1), rgb(0.3, 0.2, 1)]
+        var y = box.minY, k = 0
+        while y < box.maxY {
+            let h = 0.6 + hash01(seed * 13 + k) * 2
+            palette[Int(hash01(seed * 7 + k) * 6) % 6].setFill()
+            NSRect(x: box.minX + (hash01(seed * 5 + k) - 0.5) * 2, y: y, width: box.width, height: h).fill()
+            y += h; k += 1
+        }
+    case .gold: // oro lucido con un bagliore che passa
+        NSGradient(colors: [rgb(1, 0.9, 0.45), rgb(0.85, 0.6, 0.12), rgb(1, 0.85, 0.35), rgb(0.7, 0.45, 0.08)])!.draw(in: box, angle: 70)
+        let x = box.minX - 6 + frac(t * 0.9) * (box.width + 12)
+        NSColor.white.withAlphaComponent(0.9).setFill(); poly(P(x, box.minY), P(x + 1.2, box.minY), P(x + 5.2, box.maxY), P(x + 4, box.maxY))
     }
 }
 
@@ -803,6 +850,92 @@ func drawLaser(from e: NSPoint, _ t: CGFloat) {
     NSColor.white.setFill(); sparkle(e, 1.6 * pulse)
 }
 
+/// Palloncini legati alla schiena che ondeggiano (si disegnano dietro al dino).
+func drawBalloons(from b: NSPoint, _ t: CGFloat) {
+    let spots: [(dx: CGFloat, dy: CGFloat, c: NSColor)] = [(-6, 6.5, rgb(0.95, 0.25, 0.3)), (-2.5, 8, rgb(1, 0.85, 0.2)), (-8.5, 8.8, rgb(0.3, 0.6, 1))]
+    for (k, s) in spots.enumerated() {
+        let sway = sin(t * 2 + CGFloat(k) * 1.3) * 1.2, bob = sin(t * 3 + CGFloat(k)) * 0.5
+        let c = P(b.x + s.dx + sway, b.y + s.dy + bob)
+        let string = NSBezierPath(); string.move(to: b)
+        string.curve(to: P(c.x, c.y - 2.6), controlPoint1: P(b.x - 1, b.y + 3), controlPoint2: P(c.x + sway * 0.5, c.y - 5))
+        NSColor(white: 0.9, alpha: 1).setStroke(); string.lineWidth = 0.2; string.stroke()
+        s.c.setFill(); oval(NSRect(x: c.x - 1.9, y: c.y - 2.4, width: 3.8, height: 4.8)); poly(P(c.x - 0.4, c.y - 2.8), P(c.x + 0.4, c.y - 2.8), P(c.x, c.y - 2.3))
+        NSColor.white.withAlphaComponent(0.55).setFill(); oval(NSRect(x: c.x - 1.2, y: c.y + 0.4, width: 0.8, height: 1.2))
+    }
+}
+
+/// Gomma da masticare: una bolla rosa che si gonfia dalla bocca e scoppia ogni 1,8 s.
+func drawBubblegum(at mouth: NSPoint, _ t: CGFloat) {
+    let ph = frac(t / 1.8)
+    if ph < 0.8 {
+        let r = 0.4 + ph / 0.8 * 3.2, c = P(mouth.x + r * 0.8, mouth.y)
+        NSColor(srgbRed: 1, green: 0.5, blue: 0.75, alpha: 0.85).setFill(); oval(NSRect(x: c.x - r, y: c.y - r, width: 2 * r, height: 2 * r))
+        NSColor.white.withAlphaComponent(0.6).setFill(); oval(NSRect(x: c.x - r * 0.5, y: c.y + r * 0.25, width: r * 0.45, height: r * 0.35))
+    } else { // pop: brandelli rosa che volano via e un lampo bianco
+        let k = (ph - 0.8) / 0.2, c = P(mouth.x + 2.8, mouth.y)
+        NSColor(srgbRed: 1, green: 0.5, blue: 0.75, alpha: 1 - k).setFill()
+        for j in 0..<8 {
+            let a = CGFloat(j) * .pi / 4, d = 3 + k * 4
+            oval(NSRect(x: c.x + cos(a) * d - 0.6, y: c.y + sin(a) * d - 0.6, width: 1.2, height: 1.2))
+        }
+        NSColor.white.withAlphaComponent(1 - k).setFill(); sparkle(c, 2 * (1 - k) + 0.5)
+    }
+}
+
+/// Aureola: anello d'oro che fluttua sopra la testa, con alone, raggi che girano e un riflesso che corre.
+func drawHalo(over h: NSPoint, lift: CGFloat, _ t: CGFloat) {
+    let c = P(h.x - 0.3, h.y + 3 + lift + sin(t * 2.5) * 0.4)
+    NSColor(srgbRed: 1, green: 0.95, blue: 0.5, alpha: 0.3 + 0.15 * sin(t * 4)).setFill(); oval(NSRect(x: c.x - 3.6, y: c.y - 1.6, width: 7.2, height: 3.2))
+    NSColor(srgbRed: 1, green: 0.95, blue: 0.6, alpha: 0.6).setStroke()
+    for k in 0..<6 {
+        let a = t * 1.5 + CGFloat(k) * .pi / 3
+        strokeLine(P(c.x + cos(a) * 3.2, c.y + sin(a) * 1.4), P(c.x + cos(a) * 4.8, c.y + sin(a) * 2.3), width: 0.25)
+    }
+    let ring = NSBezierPath(ovalIn: NSRect(x: c.x - 2.6, y: c.y - 0.75, width: 5.2, height: 1.5))
+    rgb(1, 0.82, 0.25).setStroke(); ring.lineWidth = 0.55; ring.stroke()
+    let a = t * 4; NSColor.white.setFill(); sparkle(P(c.x + cos(a) * 2.6, c.y + sin(a) * 0.75), 0.8)
+}
+
+/// UFO: disco volante sopra il dino, luci che cambiano colore e raggio traente con particelle che salgono.
+func drawUFO(over h: NSPoint, ground: CGFloat, _ t: CGFloat) {
+    let c = P(h.x - 1 + sin(t * 1.5) * 1.2, h.y + 5.8 + sin(t * 2.3) * 0.6)
+    NSColor(srgbRed: 0.6, green: 1, blue: 0.5, alpha: 0.25 + 0.12 * sin(t * 8)).setFill()
+    poly(P(c.x - 1.5, c.y - 1), P(c.x + 1.5, c.y - 1), P(c.x + 6, ground), P(c.x - 6, ground))
+    NSColor.white.withAlphaComponent(0.8).setFill()
+    for k in 0..<6 {
+        let ph = frac(t * 0.9 + CGFloat(k) / 6), y = ground + ph * (c.y - 1 - ground), half = 6 - ph * 4.5
+        oval(NSRect(x: c.x + (hash01(k + 90) * 2 - 1) * half * 0.8 - 0.3, y: y, width: 0.6, height: 0.6))
+    }
+    NSColor(srgbRed: 0.55, green: 0.85, blue: 1, alpha: 0.85).setFill(); oval(NSRect(x: c.x - 2, y: c.y - 0.2, width: 4, height: 3))
+    rgb(0.6, 0.63, 0.7).setFill(); oval(NSRect(x: c.x - 5, y: c.y - 1.3, width: 10, height: 2.6))
+    rgb(0.4, 0.42, 0.48).setFill(); oval(NSRect(x: c.x - 3.5, y: c.y - 1.5, width: 7, height: 1))
+    for k in 0..<5 {
+        NSColor(hue: frac(CGFloat(k) / 5 + t), saturation: 0.9, brightness: 1, alpha: 1).setFill()
+        oval(NSRect(x: c.x - 4.4 + CGFloat(k) * 2, y: c.y - 0.4, width: 0.8, height: 0.8))
+    }
+}
+
+/// Fuochi d'artificio: due razzi alternati partono dalla schiena e scoppiano in corone colorate che ricadono.
+func drawFireworks(from b: NSPoint, _ t: CGFloat) {
+    for k in 0..<2 {
+        let cycle = t * 0.75 + CGFloat(k) * 0.5, ph = frac(cycle)
+        let x0 = b.x - 1 - CGFloat(k) * 3, top = b.y + 7.5 + CGFloat(k) * 1.2
+        if ph < 0.3 { // il razzo sale lasciando la scia
+            let u = ph / 0.3, y = b.y + u * (top - b.y), x = x0 - u * 2
+            NSColor(srgbRed: 1, green: 0.8, blue: 0.3, alpha: 0.7).setStroke(); strokeLine(P(x + 0.6, y - 2.5), P(x, y), width: 0.35)
+            NSColor.white.setFill(); oval(NSRect(x: x - 0.4, y: y - 0.4, width: 0.8, height: 0.8))
+        } else { // scoppio: ogni lancio ha un colore diverso
+            let e = (ph - 0.3) / 0.7, c = P(x0 - 2, top), hue = frac(floor(cycle) * 0.29 + CGFloat(k) * 0.37)
+            for j in 0..<14 {
+                let a = CGFloat(j) / 14 * 2 * .pi, r = e * 4.5
+                NSColor(hue: frac(hue + CGFloat(j % 3) * 0.08), saturation: 0.8, brightness: 1, alpha: 1 - e).setFill()
+                oval(NSRect(x: c.x + cos(a) * r - 0.5, y: c.y + sin(a) * r - e * e * 3 - 0.5, width: 1, height: 1))
+            }
+            NSColor.white.withAlphaComponent(max(0, 1 - e * 4)).setFill(); sparkle(c, 3 * (1 - e))
+        }
+    }
+}
+
 /// Cuffie da DJ: archetto sopra la testa, padiglione con luci arcobaleno, note che volano via.
 func drawHeadphones(top h: NSPoint, eye e: NSPoint, _ t: CGFloat) {
     let cup = P(e.x - 2.1, e.y - 0.1)
@@ -870,7 +1003,22 @@ func drawDino(_ rect: CGRect, phase: CGFloat?, wings: Bool, flap: CGFloat, look:
         }
     }
     if look.costume == .galaxy { orbit(front: false) }
+    if look.costume == .electric { // aura elettrica che vibra
+        NSColor(srgbRed: 0.3, green: 0.8, blue: 1, alpha: 0.25 + 0.15 * sin(t * 15)).setFill()
+        oval(NSRect(x: p.minX - 2, y: p.minY - 1, width: 18, height: 15))
+    }
+    if look.costume == .glitch { // immagine sdoppiata rossa e azzurra che trema
+        var copy = look; copy.costume = nil; copy.gadget = nil
+        let jitter = (hash01(Int(t * 12)) - 0.5) * 1.5
+        for (color, dx): ([CGFloat], CGFloat) in [([1, 0.1, 0.4], -1.3), ([0.1, 1, 1], 1.3)] {
+            copy.skin = color; copy.accent = color
+            ctx.saveGState(); ctx.setAlpha(0.55); ctx.beginTransparencyLayer(auxiliaryInfo: nil)
+            drawDino(rect.offsetBy(dx: dx + jitter, dy: 0), phase: phase, wings: false, flap: 0, look: copy)
+            ctx.endTransparencyLayer(); ctx.restoreGState()
+        }
+    }
     if look.gadget == .cape { drawCape(at: pt(f.back.x, f.back.y), t) }
+    if look.gadget == .balloons { drawBalloons(from: pt(f.back.x, f.back.y), t) }
 
     // --- corpo: con una skin, si disegna in un livello a parte e poi ci si dipinge sopra la texture
     if look.costume != nil {
@@ -969,6 +1117,10 @@ func drawDino(_ rect: CGRect, phase: CGFloat?, wings: Bool, flap: CGFloat, look:
     case .jetpack: drawJetpack(at: back, t)
     case .storm: drawStorm(over: head, ground: ground, t)
     case .laser: drawLaser(from: eye, t)
+    case .bubblegum: drawBubblegum(at: P(eye.x + 1.6 * f.eyeScale, eye.y - 1.3 * f.eyeScale), t)
+    case .halo: drawHalo(over: head, lift: look.hat == .none ? 0 : 3 * f.hatScale, t) // sopra l'eventuale cappello
+    case .ufo: drawUFO(over: head, ground: ground, t)
+    case .fireworks: drawFireworks(from: back, t)
     default: break
     }
     switch look.costume {
@@ -986,6 +1138,56 @@ func drawDino(_ rect: CGRect, phase: CGFloat?, wings: Bool, flap: CGFloat, look:
             NSColor.white.withAlphaComponent(max(0, sin(t * 4 + CGFloat(k) * 1.7))).setFill()
             sparkle(P(p.minX - 2 + hash01(k + 60) * 18, p.minY + hash01(k + 70) * 15), 0.9)
         }
+    case .ice: // fiato gelido davanti al muso e fiocchi di neve che cadono
+        for k in 0..<4 {
+            let ph = frac(t * 1.2 + CGFloat(k) / 4), r = 0.5 + ph * 1.6
+            NSColor(white: 1, alpha: 0.7 * (1 - ph)).setFill()
+            oval(NSRect(x: eye.x + 2 + ph * 6 - r, y: eye.y - 1.5 + sin(ph * 6) * 0.6 - r, width: 2 * r, height: 2 * r))
+        }
+        rgb(0.85, 0.95, 1).setFill()
+        for k in 0..<8 {
+            let ph = frac(t * 0.5 + hash01(k + 80))
+            sparkle(P(p.minX - 2 + hash01(k + 81) * 18 + sin(t * 2 + CGFloat(k)), p.maxY + 3 - ph * 16), 0.7)
+        }
+    case .zombie: // onde di puzza dalla schiena e mosche che ronzano attorno alla testa
+        for k in 0..<2 {
+            let ph = frac(t * 0.6 + CGFloat(k) * 0.5), x = p.minX + 3 + CGFloat(k) * 3, y = p.minY + 9 + ph * 7
+            let wave = NSBezierPath(); wave.move(to: P(x, y)); wave.curve(to: P(x, y + 3), controlPoint1: P(x + 1.2, y + 1), controlPoint2: P(x - 1.2, y + 2))
+            NSColor(srgbRed: 0.55, green: 0.8, blue: 0.3, alpha: 0.7 * (1 - ph)).setStroke(); wave.lineWidth = 0.35; wave.stroke()
+        }
+        for k in 0..<4 {
+            let a = t * (6 + CGFloat(k)) + CGFloat(k) * 1.7
+            let c = P(head.x + cos(a) * (2.5 + hash01(k) * 1.5) + sin(t * 13 + CGFloat(k)) * 0.5, head.y + 1.5 + sin(a * 1.3) * 1.8)
+            NSColor(white: 0.9, alpha: 0.7).setFill() // ali che vibrano
+            oval(NSRect(x: c.x - 0.5, y: c.y + 0.05, width: 0.6, height: 0.4)); oval(NSRect(x: c.x - 0.1, y: c.y + 0.05, width: 0.6, height: 0.4))
+            NSColor.black.setFill(); oval(NSRect(x: c.x - 0.3, y: c.y - 0.3, width: 0.6, height: 0.5))
+        }
+    case .electric: // scariche che saltano dal corpo al terreno
+        if frac(t * 3) < 0.5 {
+            let seed = Int(t * 6)
+            NSColor(srgbRed: 0.7, green: 0.95, blue: 1, alpha: 1).setStroke()
+            for k in 0..<2 {
+                let s = P(p.minX + 3 + hash01(seed * 3 + k) * 8, p.minY + 3)
+                strokeLine(s, P(s.x + 1, s.y - 1.2), P(s.x - 0.3, s.y - 2), P(s.x + 0.6, ground), width: 0.3)
+            }
+        }
+    case .glitch: // righe di scansione e blocchi di pixel fuori posto
+        NSColor.black.withAlphaComponent(0.25).setFill()
+        for y in stride(from: p.minY, to: p.maxY + 1, by: 1.2) { NSRect(x: p.minX - 1, y: y, width: 16, height: 0.3).fill() }
+        if frac(t * 2.3) < 0.3 {
+            let seed = Int(t * 9)
+            for k in 0..<3 {
+                [rgb(1, 0.1, 0.6), rgb(0.1, 1, 0.9), rgb(1, 1, 1)][k].withAlphaComponent(0.85).setFill()
+                NSRect(x: p.minX + hash01(seed * 4 + k) * 14, y: p.minY + hash01(seed * 4 + k + 1) * 12, width: 1 + hash01(seed + k) * 3, height: 0.6).fill()
+            }
+        }
+    case .gold: // scintille dorate e una grande stella "bling" che lampeggia
+        for k in 0..<8 {
+            NSColor(srgbRed: 1, green: 0.95, blue: 0.6, alpha: max(0, sin(t * 5 + CGFloat(k) * 2.1))).setFill()
+            sparkle(P(p.minX - 1 + hash01(k + 100) * 16, p.minY + hash01(k + 101) * 14), 0.8)
+        }
+        let bling = max(0, sin(t * 2.5))
+        if bling > 0.6 { NSColor.white.withAlphaComponent((bling - 0.6) / 0.4).setFill(); sparkle(P(eye.x - 3, eye.y + 1.5), 3 * bling) }
     default: break
     }
 
@@ -1004,7 +1206,7 @@ final class DinoPreview: NSView {
         let s = scenes[0]
         NSBezierPath(roundedRect: bounds, xRadius: 14, yRadius: 14).addClip()
         NSGradient(starting: s.skyBottom, ending: s.skyTop)!.draw(in: bounds, angle: 90)
-        let k = min(bounds.width / 26, bounds.height / 23) // unità del gioco → punti; alto abbastanza per la nuvola temporale
+        let k = min(bounds.width / 26, bounds.height / 25) // unità del gioco → punti; alto abbastanza per nuvola, palloncini, UFO e fuochi
         let tr = NSAffineTransform(); tr.translateX(by: (bounds.width - 26 * k) / 2, yBy: 0); tr.scale(by: k); tr.concat()
         drawBack(.hills, 13, 0, s)
         s.mid.setFill(); drawFern(2.5, size: 5); drawPalm(21, height: 11)
@@ -1657,6 +1859,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     var shopWindow: NSWindow?
     let shopCoins = NSTextField(labelWithString: "")
     var shopCards: [(item: ShopItem, preview: DinoPreview, price: NSTextField, button: NSButton)] = []
+    var shopPages: [NSView] = [] // 0 = skin, 1 = accessori
     let speciesPop = NSPopUpButton(frame: .zero, pullsDown: false), hatPop = NSPopUpButton(frame: .zero, pullsDown: false)
     let glassesPop = NSPopUpButton(frame: .zero, pullsDown: false), neckPop = NSPopUpButton(frame: .zero, pullsDown: false)
     let skinWell = NSColorWell(style: .minimal), accentWell = NSColorWell(style: .minimal)
@@ -1720,12 +1923,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 return v
             }
             func row(_ items: [ShopItem]) -> NSView { let r = NSStackView(views: items.map(card)); r.spacing = 14; r.alignment = .top; return r }
+            func page(_ items: [ShopItem]) -> NSView { // una pagina per categoria: due file da 5
+                let p = NSStackView(views: [row(Array(items.prefix(5))), row(Array(items.dropFirst(5)))])
+                p.orientation = .vertical; p.spacing = 18
+                return p
+            }
+            shopPages = [page(Costume.allCases.map { .costume($0) }), page(Gadget.allCases.map { .gadget($0) })]
+            shopPages[1].isHidden = true // le pagine hanno la stessa misura: la finestra non cambia forma
+            let tabs = NSSegmentedControl(labels: ["Skin", "Accessori speciali"], trackingMode: .selectOne,
+                                          target: self, action: #selector(shopPageChanged))
+            tabs.selectedSegment = 0
+            tabs.controlSize = .large
             shopCoins.font = .systemFont(ofSize: 16, weight: .semibold)
             let hint = label("Le monete si raccolgono correndo: gli archi sopra i cactus si prendono saltando.", size: 12, weight: .regular)
             hint.textColor = .secondaryLabelColor
-            let content = stack([label("Negozio", size: 26, weight: .heavy), shopCoins,
-                                 label("Skin", size: 16, weight: .bold), row(Costume.allCases.map { .costume($0) }),
-                                 label("Accessori speciali", size: 16, weight: .bold), row(Gadget.allCases.map { .gadget($0) }), hint])
+            let content = stack([label("Negozio", size: 26, weight: .heavy), shopCoins, tabs] + shopPages + [hint])
             let w = NSWindow(contentRect: .zero, styleMask: [.titled, .closable], backing: .buffered, defer: false)
             w.title = "Negozio · Jurassic Run"
             w.isReleasedWhenClosed = false
@@ -1737,6 +1949,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         refreshShop()
         shopWindow!.makeKeyAndOrderFront(nil)
+    }
+
+    @objc func shopPageChanged(_ sender: NSSegmentedControl) {
+        for (i, page) in shopPages.enumerated() { page.isHidden = i != sender.selectedSegment }
     }
 
     /// Aggiorna monete, record e pulsanti di negozio e menù.
@@ -1984,7 +2200,8 @@ if CommandLine.arguments.contains("--selftest") {
     var dressed = Look(); dressed.costume = .galaxy; dressed.gadget = .laser
     assert(try! JSONDecoder().decode(Look.self, from: JSONEncoder().encode(dressed)) == dressed, "skin e accessorio si salvano")
 
-    assert(Set(ShopItem.all.map(\.id)).count == 10 && ShopItem.all.allSatisfy { $0.price > 0 }, "10 oggetti con id unici e prezzo")
+    assert(Set(ShopItem.all.map(\.id)).count == 20 && ShopItem.all.allSatisfy { $0.price > 0 }, "20 oggetti con id unici e prezzo")
+    assert(Set(ShopItem.all.map(\.title)).count == 20, "ogni oggetto ha il suo nome")
     var purse = Wallet(coins: 100)
     assert(!purse.buy(.costume(.galaxy)) && purse.coins == 100, "senza monete sufficienti non si compra")
     assert(purse.buy(.gadget(.headphones)) && purse.coins == 40 && purse.owned.contains("extra.headphones"), "comprare scala le monete")

@@ -50,17 +50,19 @@ Quattro specie (T-Rex, Triceratopo, Stegosauro, Brachiosauro), colori a scelta, 
 
 ## Negozio
 
-Le monete si raccolgono correndo (gli archi sopra i cactus si prendono saltando) e restano salvate tra una partita e l'altra. Nel negozio si spendono per skin e accessori animati.
+Le monete si raccolgono correndo (gli archi sopra i cactus si prendono saltando) e restano salvate tra una partita e l'altra. Nel negozio si spendono per **10 skin** e **10 accessori speciali** animati, divisi in due pagine. Ogni scheda mostra il tuo dinosauro con l'oggetto addosso.
 
-![Negozio](docs/negozio.jpg)
+![Negozio, pagina delle skin](docs/negozio.jpg)
+
+![Negozio, pagina degli accessori](docs/negozio-accessori.jpg)
 
 ### Skin
 
-![Le cinque skin](docs/skin.gif)
+![Le dieci skin](docs/skin.gif)
 
 ### Accessori speciali
 
-![I cinque accessori](docs/accessori.gif)
+![I dieci accessori](docs/accessori.gif)
 
 ## Installazione
 

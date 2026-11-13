@@ -34,7 +34,7 @@ cat > "$APP/Contents/Info.plist" <<EOF
   <key>CFBundleIdentifier</key><string>local.jurassicrun</string>
   <key>CFBundleIconFile</key><string>AppIcon</string>
   <key>CFBundlePackageType</key><string>APPL</string>
-  <key>CFBundleShortVersionString</key><string>1.0</string>
+  <key>CFBundleShortVersionString</key><string>1.1</string>
   <key>LSApplicationCategoryType</key><string>public.app-category.arcade-games</string>
   <key>LSMinimumSystemVersion</key><string>13.0</string>
   <key>NSHighResolutionCapable</key><true/>
